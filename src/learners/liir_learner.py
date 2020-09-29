@@ -17,7 +17,7 @@ class LIIRLearner:
         self.last_target_update_step = 0
         self.critic_training_steps = 0
 
-        self.log_stats_t = -self.args.learner_log_interval - 1
+        #self.log_stats_t = -self.args.learner_log_interval - 1
 
         self.critic = LIIRCritic(scheme, args)
         self.target_critic = copy.deepcopy(self.critic)
@@ -79,6 +79,7 @@ class LIIRLearner:
             agent_outs = self.mac.forward(batch, t=t)
             mac_out.append(agent_outs)
         mac_out = th.stack(mac_out, dim=1)  # Concat over time
+
         # Mask out unavailable actions, renormalise (as in action selection)
         mac_out[avail_actions == 0] = 0
         mac_out = mac_out / mac_out.sum(dim=-1, keepdim=True)
@@ -195,21 +196,21 @@ class LIIRLearner:
             self._update_targets()
             self.last_target_update_step = self.critic_training_steps
 
-        if t_env - self.log_stats_t >= self.args.learner_log_interval:
-            ts_logged = len(critic_train_stats["critic_loss"])
-            for key in ["critic_loss", "critic_grad_norm", "td_error_abs", "value_mean", "target_mean"]:
-                self.logger.log_stat(key, sum(critic_train_stats[key]) / ts_logged, t_env)
+        # if t_env - self.log_stats_t >= self.args.learner_log_interval:
+        #     ts_logged = len(critic_train_stats["critic_loss"])
+        #     for key in ["critic_loss", "critic_grad_norm", "td_error_abs", "value_mean", "target_mean"]:
+        #         self.logger.log_stat(key, sum(critic_train_stats[key]) / ts_logged, t_env)
 
-            self.logger.log_stat("advantage_mean", (advantages * mask_long).sum().item() / mask_long.sum().item(),
-                                 t_env)
-            self.logger.log_stat("liir_loss", liir_loss.item(), t_env)
-            self.logger.log_stat("agent_grad_norm", grad_norm_policy, t_env)
-            self.logger.log_stat("pi_max", (pi.max(dim=1)[0] * mask_long.squeeze(-1)).sum().item() / mask_long.sum().item(),
-                                 t_env)
+        #     self.logger.log_stat("advantage_mean", (advantages * mask_long).sum().item() / mask_long.sum().item(),
+        #                          t_env)
+        #     self.logger.log_stat("liir_loss", liir_loss.item(), t_env)
+        #     self.logger.log_stat("agent_grad_norm", grad_norm_policy, t_env)
+        #     self.logger.log_stat("pi_max", (pi.max(dim=1)[0] * mask_long.squeeze(-1)).sum().item() / mask_long.sum().item(),
+        #                          t_env)
 
-            reward1 = rewards.reshape(-1,1)
-            self.logger.log_stat('rewards_mean', (reward1 * mask).sum().item() / mask.sum().item(), t_env)
-            self.log_stats_t = t_env
+        #     reward1 = rewards.reshape(-1,1)
+        #     self.logger.log_stat('rewards_mean', (reward1 * mask).sum().item() / mask.sum().item(), t_env)
+        #     self.log_stats_t = t_env
 
     def _train_critic(self, batch, rewards, terminated, actions, avail_actions, mask, bs, max_t):
         # Optimise critic
@@ -253,12 +254,13 @@ class LIIRLearner:
             loss = (masked_td_error ** 2).sum() / mask_t.sum()
             self.critic_optimiser.zero_grad()
             loss.backward()
-            grad_norm = th.nn.utils.clip_grad_norm_(self.critic_params, self.args.grad_norm_clip)
+            if self.args.grad_norm_clip:
+                grad_norm = th.nn.utils.clip_grad_norm_(self.critic_params, self.args.grad_norm_clip)
             self.critic_optimiser.step()
-            self.critic_training_steps += 1
+            #self.critic_training_steps += 1
 
             running_log["critic_loss"].append(loss.item())
-            running_log["critic_grad_norm"].append(grad_norm)
+            #running_log["critic_grad_norm"].append(grad_norm)
             mask_elems = mask_t.sum().item()
             running_log["td_error_abs"].append((masked_td_error.abs().sum().item() / mask_elems))
             running_log["value_mean"].append((q_t.view(bs, self.n_agents) * mask_t).sum().item() / mask_elems)
@@ -268,7 +270,7 @@ class LIIRLearner:
 
     def _update_targets(self):
         self.target_critic.load_state_dict(self.critic.state_dict())
-        self.logger.console_logger.info("Updated target network")
+        #self.logger.console_logger.info("Updated target network")
 
     def _update_policy(self):
         self.policy_new.load_state(self.mac)

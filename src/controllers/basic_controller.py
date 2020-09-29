@@ -2,6 +2,7 @@ from modules.agents import REGISTRY as agent_REGISTRY
 from components.action_selectors import REGISTRY as action_REGISTRY
 import torch as th
 
+
 # This multi-agent controller shares parameters between agents
 class BasicMAC:
     def __init__(self, scheme, groups, args):
@@ -20,7 +21,6 @@ class BasicMAC:
         avail_actions = ep_batch["avail_actions"][:, t_ep]
         agent_outputs = self.forward(ep_batch, t_ep, test_mode=test_mode)
         chosen_actions = self.action_selector.select_action(agent_outputs[bs], avail_actions[bs], t_env, test_mode=test_mode)
-        
         return chosen_actions
 
     def forward(self, ep_batch, t, test_mode=False):
@@ -50,7 +50,6 @@ class BasicMAC:
                 if getattr(self.args, "mask_before_softmax", True):
                     # Zero out the unavailable actions
                     agent_outs[reshaped_avail_actions == 0] = 0.0
-
 
         return agent_outs.view(ep_batch.batch_size, self.n_agents, -1)
 
