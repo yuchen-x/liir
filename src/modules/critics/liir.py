@@ -15,12 +15,12 @@ class LIIRCritic(nn.Module):
         self.output_type = "q"
 
         # Set up network layers
-        self.fc1 = nn.Linear(input_shape, 128)
-        self.fc2 = nn.Linear(128, 128)
-        self.fc3_r_in = nn.Linear(128, self.n_actions)
-        self.fc3_v_mix = nn.Linear(128, 1)
+        self.fc1 = nn.Linear(input_shape, args.critic_mlp_layer_size)
+        self.fc2 = nn.Linear(args.critic_mlp_layer_size, args.critic_mlp_layer_size)
+        self.fc3_r_in = nn.Linear(args.critic_mlp_layer_size, self.n_actions)
+        self.fc3_v_mix = nn.Linear(args.critic_mlp_layer_size, 1)
 
-        self.fc4 = nn.Linear(128*self.n_agents,1)
+        self.fc4 = nn.Linear(args.critic_mlp_layer_size*self.n_agents,1)
     
     def forward(self, batch, t=None):
         inputs = self._build_inputs(batch, t=t) #(bs, eplen, nagts, fea_len)
@@ -65,7 +65,9 @@ class LIIRCritic(nn.Module):
             last_actions = th.cat([th.zeros_like(batch["actions_onehot"][:, 0:1]), batch["actions_onehot"][:, :-1]], dim=1)
             last_actions = last_actions.view(bs, max_t, 1, -1).repeat(1, 1, self.n_agents, 1)
             inputs.append(last_actions)
+
         inputs.append(th.eye(self.n_agents, device=batch.device).unsqueeze(0).unsqueeze(0).expand(bs, max_t, -1, -1))
+
         inputs = th.cat([x.reshape(bs, max_t, self.n_agents, -1) for x in inputs], dim=-1)
         return inputs
 
@@ -83,4 +85,3 @@ class LIIRCritic(nn.Module):
         # agent id
         input_shape += self.n_agents
         return input_shape
-    

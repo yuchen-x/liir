@@ -1,4 +1,5 @@
 import numpy as np
+import random
 import os
 import collections
 from os.path import dirname, abspath
@@ -14,7 +15,6 @@ import datetime
 
 from run import run
 
-
 SETTINGS['CAPTURE_MODE'] = "fd" # set to "no" if you want to see stdout/stderr in console
 logger = get_logger()
 
@@ -28,12 +28,15 @@ results_path = os.path.join(dirname(dirname(abspath(__file__))), "results")
 @ex.main
 def my_main(_run, _config, _log, env_args):
     # Setting the random seed throughout the modules
-    np.random.seed(_config["seed"])
-    th.manual_seed(_config["seed"])
-    env_args['seed'] = _config["seed"]
+    config = config_copy(_config)
+    np.random.seed(config["seed"])
+    random.seed(config["seed"])
+    th.manual_seed(config["seed"])
+    th.set_num_threads(1)
+    config['env_args']['seed'] = config["seed"]
 
     # run the framework
-    run(_run, _config, _log)
+    run(_run, config, _log)
 
 
 def _get_config(params, arg_name, subfolder):
@@ -61,6 +64,14 @@ def recursive_dict_update(d, u):
             d[k] = v
     return d
 
+def config_copy(config):
+    if isinstance(config, dict):
+        return {k: config_copy(v) for k, v in config.items()}
+    elif isinstance(config, list):
+        return [config_copy(v) for v in config]
+    else:
+        return deepcopy(config)
+
 
 if __name__ == '__main__':
     params = deepcopy(sys.argv)
@@ -79,25 +90,25 @@ if __name__ == '__main__':
     config_dict = recursive_dict_update(config_dict, alg_config)
     
     # specify the map for experiment
-    map_name = None
-    for _i, _v in enumerate(params):
-        if _v.split("=")[0] == "--map":
-            map_name = _v.split("=")[1]
-            del params[_i]
-            break
-    if map_name:
-        config_dict['env_args']['map_name'] = map_name
-    else: 
-        map_name = config_dict['env_args']['map_name'] 
+    # map_name = None
+    # for _i, _v in enumerate(params):
+    #     if _v.split("=")[0] == "--map":
+    #         map_name = _v.split("=")[1]
+    #         del params[_i]
+    #         break
+    # if map_name:
+    #     config_dict['env_args']['map_name'] = map_name
+    # else: 
+    #     map_name = config_dict['env_args']['map_name'] 
         
     # now add all the config to sacred
     ex.add_config(config_dict)
 
     # Save to disk by default for sacred
-    unique_token = "{}_{}_{}".format(config_dict['name'], map_name, datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
-    logger.info("Saving to FileStorageObserver in results/sacred/{}/.".format(unique_token))
-    file_obs_path = os.path.join(results_path, "sacred", unique_token)
-    ex.observers.append(FileStorageObserver.create(file_obs_path))
+    # unique_token = "{}_{}_{}".format(config_dict['name'], map_name, datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+    # logger.info("Saving to FileStorageObserver in results/sacred/{}/.".format(unique_token))
+    # file_obs_path = os.path.join(results_path, "sacred", unique_token)
+    # ex.observers.append(FileStorageObserver.create(file_obs_path))
 
     ex.run_commandline(params)
 
