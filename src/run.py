@@ -218,6 +218,9 @@ def run_sequential(args, logger):
         #     logger.log_stat("episode", episode, runner.t_env)
         #     logger.print_recent_stats()
         #     last_log_T = runner.t_env
+        if episode % 1000 == 0.0:
+            save_test_data(args.run_id, test_returns, args.save_dir)
+            save_train_data(args.run_id, runner.train_returns, args.save_dir)
 
     save_test_data(args.run_id, test_returns, args.save_dir)
     save_train_data(args.run_id, runner.train_returns, args.save_dir)
