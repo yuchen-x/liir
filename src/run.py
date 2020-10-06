@@ -186,7 +186,8 @@ def run_sequential(args, logger):
 
         # Execute test runs once in a while
         n_test_runs = max(1, args.test_nepisode // runner.batch_size)
-        if (runner.t_env - last_test_T) / args.test_interval >= 1.0:
+        #if (runner.t_env - last_test_T) / args.test_interval >= 1.0:
+        if episode % (args.test_interval - (args.test_interval % args.batch_size_run)) == 0:
 
             # logger.console_logger.info("t_env: {} / {}".format(runner.t_env, args.t_max))
             # logger.console_logger.info("Estimated time left: {}. Time passed: {}".format(
