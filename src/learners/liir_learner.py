@@ -101,8 +101,6 @@ class LIIRLearner:
         log_pi_taken = log_pi_taken.reshape(-1, 1)
 
         liir_loss = - ((advantages * log_pi_taken) * mask_long).sum() / mask_long.sum()
-        import ipdb
-        ipdb.set_trace()
 
         # Optimise agents
         self.agent_optimiser.zero_grad()
