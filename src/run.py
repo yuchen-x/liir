@@ -166,7 +166,7 @@ def run_sequential(args, logger):
     logger.console_logger.info("Beginning training for {} timesteps".format(args.t_max))
 
     test_returns = []
-    while runner.t_env <= args.t_max:
+    while episode <= args.t_max:
 
         # Run for a whole episode at a time
         episode_batch = runner.run(test_mode=False)
