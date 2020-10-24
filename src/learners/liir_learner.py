@@ -68,8 +68,9 @@ class LIIRLearner:
         mask_alive = avail_actions1[:, :, 0]
         mask_alive = mask_alive.float()
 
-        q_vals, critic_train_stats, target_mix, target_ex, v_ex, r_in = self._train_critic(batch, rewards, terminated,                                                                                        actions, avail_actions,
-                                                                                           critic_mask, bs, max_t)
+        for _ in range(self.args.critic_litr):
+            q_vals, critic_train_stats, target_mix, target_ex, v_ex, r_in = self._train_critic(batch, rewards, terminated, actions, avail_actions,
+                                                                                               critic_mask, bs, max_t)
 
         actions = actions[:, :-1]
 
