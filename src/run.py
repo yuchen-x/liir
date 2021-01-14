@@ -172,8 +172,6 @@ def run_sequential(args, logger):
         test_returns = []
         episode = 0
     start = time.time()
-    import ipdb
-    ipdb.set_trace()
     while episode <= args.t_max:
 
         # Run for a whole episode at a time
@@ -230,10 +228,10 @@ def run_sequential(args, logger):
             save_test_data(args.run_id, test_returns, args.save_dir)
             save_train_data(args.run_id, runner.train_returns, args.save_dir)
 
-        if (time.time() - start) / 3600 >= 0.003:
+        if (time.time() - start) // 3600 >= 23:
             save_ckpt(args.run_id, episode, learner, mac, test_returns, args.save_dir)
             start = time.time()
-            print('save')
+            break
 
     save_test_data(args.run_id, test_returns, args.save_dir)
     save_train_data(args.run_id, runner.train_returns, args.save_dir)
