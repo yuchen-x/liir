@@ -47,5 +47,6 @@ obs_last_action: False # Include the agent's last action (one_hot) in the observ
 # --- Experiment running params ---
 run_id: 0
 save_dir: "trail"
+resume: False
 repeat_id: 1
 label: "default_label"
