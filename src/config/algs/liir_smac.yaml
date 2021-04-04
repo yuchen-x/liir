@@ -23,5 +23,6 @@ td_lambda: 0.8
 agent_output_type: "pi_logits"
 learner: "liir_learner"
 critic_mlp_layer_size: 64
+state_critic: False
 
 name: "liir_smac"
